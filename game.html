@@ -1,0 +1,147 @@
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+// Input handling
+let keys = {};
+document.addEventListener("keydown", e => {
+    keys[e.code] = true;
+    if (!gameRunning && e.code === "Enter") startGame();
+});
+document.addEventListener("keyup", e => keys[e.code] = false);
+
+// Player (bird)
+let player = {
+    x: 150,
+    y: canvas.height / 2,
+    w: 34,
+    h: 26,
+    vy: 0,
+    gravity: 0.5,
+    flap: -8
+};
+
+// Environment
+const baseScrollSpeed = 2;
+let scrollSpeed = baseScrollSpeed;
+
+// Clouds
+let clouds = [];
+function initClouds() {
+    clouds = [];
+    for (let i = 0; i < 30; i++) {
+        clouds.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * (canvas.height * 0.5),
+            r: 20 + Math.random() * 30,
+            speed: 0.2 + Math.random() * 0.4
+        });
+    }
+}
+
+// Trees (obstacles)
+let trees = [];
+let treeGap = 140;
+let treeIntervalFrames = 120; // ~2 seconds at 60fps
+let frameCount = 0;
+
+// Score/state
+let score = 0;
+let highScore = 0;
+let gameRunning = false;
+
+// Drawing helpers
+function drawTitle() {
+    ctx.save();
+    ctx.fillStyle = "white";
+    ctx.shadowColor = "#00ffff";
+    ctx.shadowBlur = 20;
+    ctx.font = "28px Arial";
+    ctx.textAlign = "left";
+    ctx.fillText("Flappy Bird - Cloudy Trees", 20, 40);
+    ctx.restore();
+}
+
+function drawScore() {
+    ctx.save();
+    ctx.fillStyle = "white";
+    ctx.shadowColor = "#00ffff";
+    ctx.shadowBlur = 20;
+    ctx.font = "30px Arial";
+    ctx.textAlign = "right";
+    ctx.fillText(`Score: ${score}`, canvas.width - 20, 40);
+    ctx.font = "16px Arial";
+    ctx.fillText(`High Score: ${highScore}`, canvas.width - 20, 65);
+    ctx.restore();
+}
+
+function drawButton(text) {
+    ctx.save();
+    ctx.fillStyle = "white";
+    ctx.shadowColor = "#00ffff";
+    ctx.shadowBlur = 30;
+    ctx.font = "bold 32px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(text, canvas.width / 2, canvas.height * 0.75);
+    ctx.restore();
+}
+
+function drawClouds() {
+    ctx.fillStyle = "white";
+    clouds.forEach(c => {
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+        ctx.fill();
+    });
+}
+
+function drawTrees() {
+    trees.forEach(t => {
+        // Trunks
+        ctx.fillStyle = "#2E8B57"; // sea green
+        ctx.fillRect(t.x, 0, 60, t.top);
+        ctx.fillRect(t.x, t.top + treeGap, 60, canvas.height - (t.top + treeGap));
+
+        // Foliage caps
+        ctx.fillStyle = "#228B22";
+        ctx.beginPath(); // top foliage
+        ctx.moveTo(t.x - 10, t.top);
+        ctx.lineTo(t.x + 30, t.top - 30);
+        ctx.lineTo(t.x + 70, t.top);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath(); // bottom foliage
+        const by = t.top + treeGap;
+        ctx.moveTo(t.x - 10, by);
+        ctx.lineTo(t.x + 30, by + 30);
+        ctx.lineTo(t.x + 70, by);
+        ctx.closePath();
+        ctx.fill();
+    });
+}
+
+function drawPlayer() {
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.3)";
+    ctx.shadowBlur = 10;
+
+    // Body
+    ctx.fillStyle = "#FFD700";
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+
+    // Beak
+    ctx.fillStyle = "#FF8C00";
+    ctx.beginPath();
+    ctx.moveTo(player.x + player.w, player.y + player.h / 2 - 4);
+    ctx.lineTo(player.x + player.w + 10, player.y + player.h / 2);
+    ctx.lineTo(player.x + player.w, player.y + player.h / 2 + 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Eye
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.arc(player.x + player.w * 0.3, player.y + player.h * 0.35, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
