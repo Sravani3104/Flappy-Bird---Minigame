@@ -11,10 +11,6 @@ Challenges Faced during Creation (HTML5, CSS, JS)
 - Balancing gravity, flap strength, and scroll speed for natural gameplay.
 - Troubleshooting issues like collision detection accuracy and obstacle spacing.
 
-🎮 Play Online
-You can play the game directly in your browser here:
-Play Flappy Bird - Cloudy Trees
-
 ✨ Features
 - Sky-blue background with fluffy clouds.
 - Tree obstacles with gaps that scroll smoothly across the screen.
